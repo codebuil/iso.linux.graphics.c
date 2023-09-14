@@ -1,2 +1,1 @@
-# pygame.platform
-platform game pygame
+# iso.linux.graphics
