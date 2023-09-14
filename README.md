@@ -1,2 +1,3 @@
 # iso.linux.graphics
-functions hline and pixels
+functions hline and pixels vline
+
