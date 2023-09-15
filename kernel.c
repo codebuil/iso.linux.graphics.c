@@ -1,3 +1,82 @@
+static unsigned char *memoryStart;
+typedef int size_t;
+int NULL;
+// Estrutura para representar um bitmap com cabeçalho
+typedef struct Bitmap {
+    int x;          // Comprimento em X
+    int y;          // Comprimento em Y
+    unsigned char* data; // Ponteiro para os dados do bitmap
+} Bitmap;
+
+ void memfill(void *dest, size_t length, unsigned char value) {
+    // Cast o ponteiro para unsigned char* para permitir o preenchimento byte a byte
+    unsigned char *d = (unsigned char *)dest;
+
+    // Preencha os bytes da memória com o valor especificado
+    for (size_t i = 0; i < length; i++) {
+        d[i] = value;
+    }
+}
+
+void memcopy(void *dest, const void *src, size_t length) {
+    // Cast os ponteiros para unsigned char* para permitir a cópia byte a byte
+    unsigned char *d = (unsigned char *)dest;
+    const unsigned char *s = (const unsigned char *)src;
+
+    // Copie os bytes de src para dest
+    for (size_t i = 0; i < length; i++) {
+        d[i] = s[i];
+    }
+}
+ char *malloc(int length) {
+    // Verifica se há espaço suficiente na memória
+    unsigned char *memoryEnd = memoryStart + length + sizeof(int) * 2+4;
+    if (memoryEnd > (unsigned char *)0x200000) {
+        // Não há espaço suficiente
+        return (char*)NULL;
+    }
+
+    // Preenche o bloco de memória com zeros
+    memfill(memoryStart, length + sizeof(int) * 2, 0);
+
+    // Preenche o inteiro do cabeçalho
+    *(char *)memoryStart = length;
+
+    // Preenche o inteiro do rodapé
+    *(char *)(memoryStart + length + sizeof(int)) = length;
+    memoryEnd=(memoryStart + sizeof(int));
+    memoryStart= memoryStart+ length + sizeof(int) * 2+8;
+    // Retorna o endereço após os inteiros do cabeçalho
+    return (char *)memoryEnd;
+}
+
+ // Função para contar o tamanho de uma string
+size_t lens(const char* str) {
+    size_t length = 0;
+    while (*str) {
+        length++;
+        str++;
+    }
+    return length;
+}
+
+// Função para copiar uma string e adicionar seu comprimento ao valor
+void strcpys(char* dest, const char* src) {
+    while (*src) {
+        *dest = *src;
+        dest++;
+        src++;
+    }
+    *dest = '\0'; // Null-terminator
+}
+unsigned char getKeys() {
+    unsigned char value;
+    
+    // Usando uma instrução asm inline para ler a porta 0x60
+    asm volatile ("inb %1, %0" : "=a"(value) : "Nd"(0x60));
+    
+    return value;
+}
 void invertScreenRightToLeft() {
     unsigned char *videoMemory = (unsigned char *)0xA0000;
     int screenWidth = 320; // Largura da tela em pixels
@@ -75,18 +154,59 @@ void box(int x,int y,int x1,int y1,char b)
 			   for(c=0;c<65000;c=c+1)
 			   	pixels(b,i+c);
  } 
- 
+ // Função para criar um bitmap
+Bitmap* createBitmap(int x, int y) {
+    // Aloca memória para a estrutura Bitmap + dados do bitmap
+    Bitmap* bmp = (Bitmap*)malloc(sizeof(Bitmap) + x * y);
+    if (bmp == (void*)NULL) {
+        return(void*) NULL; // Falha na alocação de memória
+    }
+
+    // Preenche o cabeçalho com as dimensões
+    bmp->x = x;
+    bmp->y = y;
+    
+
+    // Inicializa os dados do bitmap (opcional)
+    // Você pode preencher os dados aqui ou em outra função
+
+    return bmp; // Retorna o ponteiro para o bitmap + cabeçalho
+}
+// Função para desenhar um bitmap na tela
+void pbitmap(int x, int y, Bitmap *address) {
+    int i, j;
+    unsigned char* vga = (unsigned char*)0xA0000; // Endereço da memória de vídeo VGA
+    int screenWidth = 320; // Largura da tela no modo 13h
+
+    for (i = 0; i < address->y; i++) {
+        for (j = 0; j < address->x; j++) {
+            unsigned char pixel = address->data[i * address->x + j];
+            vga[(y + i) * screenWidth+ (x + j)] = pixel;
+        }
+    }
+}
  int kernel_main()
         {
-			   
+		Bitmap *bmp;
+		char *d;	   
 		int n=0;	   
+		int x=50;
+		int y=50;
 		cls();
+		NULL=0;
+		
+		memoryStart = (unsigned char *)0x180000;
 		for (n=0;n<280;n=n+8)   
 			hline(0,n,319,0);
 		for (n=0;n<300;n=n+8)   
 			vline(n,0,199,0);
 		box(150,75,175,100,0);	   	
-		invertScreenRightToLeft();	   
+		invertScreenRightToLeft();
+		bmp=createBitmap(x,y);
+		d=(char*)bmp->data;
+		
+		memfill(d,x*y,9);
+		pbitmap(3,3,bmp) ;  
 		return 0;	  
         }
  
