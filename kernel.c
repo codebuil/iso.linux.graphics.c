@@ -31,7 +31,7 @@ void memcopy(void *dest, const void *src, size_t length) {
  char *malloc(int length) {
     // Verifica se há espaço suficiente na memória
     unsigned char *memoryEnd = memoryStart + length + sizeof(int) * 2+4;
-    if (memoryEnd > (unsigned char *)0x200000) {
+    if (memoryEnd > (unsigned char *)0x700000) {
         // Não há espaço suficiente
         return (char*)NULL;
     }
@@ -157,7 +157,7 @@ void box(int x,int y,int x1,int y1,char b)
  // Função para criar um bitmap
 Bitmap* createBitmap(int x, int y) {
     // Aloca memória para a estrutura Bitmap + dados do bitmap
-    Bitmap* bmp = (Bitmap*)malloc(sizeof(Bitmap) + x * y);
+    Bitmap* bmp = (Bitmap*)malloc(sizeof(Bitmap));
     if (bmp == (void*)NULL) {
         return(void*) NULL; // Falha na alocação de memória
     }
@@ -165,8 +165,10 @@ Bitmap* createBitmap(int x, int y) {
     // Preenche o cabeçalho com as dimensões
     bmp->x = x;
     bmp->y = y;
-    
-
+    bmp->data=(unsigned char*) malloc(x*y+4);
+    if (bmp == (void*)NULL) {
+        return(void*) NULL; // Falha na alocação de memória
+    }
     // Inicializa os dados do bitmap (opcional)
     // Você pode preencher os dados aqui ou em outra função
 
@@ -190,12 +192,13 @@ void pbitmap(int x, int y, Bitmap *address) {
 		Bitmap *bmp;
 		char *d;	   
 		int n=0;	   
-		int x=50;
-		int y=50;
+		int x=150;
+		int y=150;
+		unsigned char* addr;
 		cls();
 		NULL=0;
 		
-		memoryStart = (unsigned char *)0x180000;
+		memoryStart = (unsigned char *)0x200000;
 		for (n=0;n<280;n=n+8)   
 			hline(0,n,319,0);
 		for (n=0;n<300;n=n+8)   
@@ -203,9 +206,9 @@ void pbitmap(int x, int y, Bitmap *address) {
 		box(150,75,175,100,0);	   	
 		invertScreenRightToLeft();
 		bmp=createBitmap(x,y);
-		d=(char*)bmp->data;
+		addr=(unsigned char*)bmp->data;
 		
-		memfill(d,x*y,9);
+		memfill(addr,x*y,9);
 		pbitmap(3,3,bmp) ;  
 		return 0;	  
         }
