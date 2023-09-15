@@ -1,3 +1,22 @@
+void invertScreenRightToLeft() {
+    unsigned char *videoMemory = (unsigned char *)0xA0000;
+    int screenWidth = 320; // Largura da tela em pixels
+    int screenHeight = 200; // Altura da tela em pixels
+    int middleLine = screenHeight / 2; // Linha do meio (se ímpar, não se mexe)
+    
+    unsigned char temp;
+    
+    for (int y = 0; y < screenHeight; y++) {
+        int offset = y * screenWidth;
+        
+        for (int x = 0; x < screenWidth / 2; x++) {
+            // Troca os valores dos pixels da direita para a esquerda
+            temp = videoMemory[offset + x];
+            videoMemory[offset + x] = videoMemory[offset + (screenWidth - x - 1)];
+            videoMemory[offset + (screenWidth - x - 1)] = temp;
+        }
+    }
+}
 
 
 void pixels(char b,int loc)
@@ -62,12 +81,12 @@ void box(int x,int y,int x1,int y1,char b)
 			   
 		int n=0;	   
 		cls();
-		for (n=0;n<200;n=n+8)   
+		for (n=0;n<280;n=n+8)   
 			hline(0,n,319,0);
-		for (n=0;n<320;n=n+8)   
+		for (n=0;n<300;n=n+8)   
 			vline(n,0,199,0);
 		box(150,75,175,100,0);	   	
-			   
+		invertScreenRightToLeft();	   
 		return 0;	  
         }
  
