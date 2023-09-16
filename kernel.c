@@ -7,7 +7,13 @@ typedef struct Bitmap {
     int y;          // Comprimento em Y
     unsigned char* data; // Ponteiro para os dados do bitmap
 } Bitmap;
-
+void memReplace(char* mem, char oldChar, char newChar, size_t length) {
+    for (size_t i = 0; i < length; i++) {
+        if (mem[i] == oldChar) {
+            mem[i] = newChar;
+        }
+    }
+}
  void memfill(void *dest, size_t length, unsigned char value) {
     // Cast o ponteiro para unsigned char* para permitir o preenchimento byte a byte
     unsigned char *d = (unsigned char *)dest;
@@ -237,7 +243,7 @@ char* getStringFromLowMemory() {
 		invertScreenRightToLeft(); 		
 		bmp=createBitmap(x,y);
 		bmp->data=getStringFromLowMemory();
-		
+		memReplace(bmp->data,0,1,10000);
 		
 		pbitmap(3,3,bmp) ;
 
